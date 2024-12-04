@@ -7,6 +7,8 @@ module com.itrash.itrash {
     requires net.synedra.validatorfx;
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
+    requires java.sql;
+
 
     opens com.itrash.itrash to javafx.fxml;
     exports com.itrash.itrash;

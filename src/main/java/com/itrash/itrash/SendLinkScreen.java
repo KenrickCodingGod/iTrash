@@ -15,11 +15,10 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 public class SendLinkScreen extends Application {
-
     @Override
     public void start(Stage primaryStage) {
         // Root layout
-        VBox root = new VBox(20);
+        VBox root = new VBox(15);
         root.setPadding(new Insets(20));
         root.setAlignment(Pos.CENTER);
         root.setStyle("-fx-background-color: #FFFFFF;"); // White background
@@ -30,27 +29,31 @@ public class SendLinkScreen extends Application {
         title.setTextFill(Color.GREEN);
 
         // Subtitle
-        Label subtitle = new Label("Send Password Reset Link");
+        Label subtitle = new Label("Keeping Our Parks and Cities Green and Clean");
         subtitle.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
         subtitle.setTextFill(Color.BLACK);
 
-        // Email field
+        // Instruction Text
+        Label instructionText = new Label("Enter email or username for reset password link.");
+        instructionText.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        instructionText.setTextFill(Color.BLACK);
+
+        // Email or Username field
         TextField emailField = new TextField();
-        emailField.setPromptText("Enter your email");
+        emailField.setPromptText("Enter your email or username");
         emailField.setMaxWidth(300);
         emailField.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 5;");
 
         // Send Link button
         Button sendLinkButton = new Button("Send Link");
         sendLinkButton.setMaxWidth(200);
-        sendLinkButton.setStyle("-fx-background-color: #004d00; -fx-text-fill: white; -fx-background-radius: 10;");
+        sendLinkButton.setStyle("-fx-background-color: #228B22; -fx-text-fill: white; -fx-background-radius: 10;"); // Dark green button
 
         // Back to Login hyperlink
         Hyperlink backToLogin = new Hyperlink("Back to Login");
         backToLogin.setTextFill(Color.GREEN);
         backToLogin.setUnderline(true);
 
-        // Add event handling to the backToLogin hyperlink
         backToLogin.setOnAction(event -> {
             LoginScreen loginScreen = new LoginScreen();
             try {
@@ -60,11 +63,11 @@ public class SendLinkScreen extends Application {
             }
         });
 
-        // Add elements to the layout
-        root.getChildren().addAll(title, subtitle, emailField, sendLinkButton, backToLogin);
+        // Add elements to the root layout
+        root.getChildren().addAll(title, subtitle, instructionText, emailField, sendLinkButton, backToLogin);
 
         // Scene and Stage
-        Scene scene = new Scene(root, 400, 300);
+        Scene scene = new Scene(root, 400, 600);
         primaryStage.setTitle("Send Link");
         primaryStage.setScene(scene);
         primaryStage.show();
