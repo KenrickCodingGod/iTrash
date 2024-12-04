@@ -5,27 +5,21 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class LoginScreen extends Application {
 
-    // Mock stored credentials
-    private final Map<String, String> storedCredentials = new HashMap<>();
-
     @Override
     public void start(Stage primaryStage) {
-        // Initialize stored credentials
-        storedCredentials.put("user@example.com", "password123");
-        storedCredentials.put("admin@example.com", "adminpassword");
-
         // Root layout
         VBox root = new VBox(15);
         root.setPadding(new Insets(20));
@@ -33,20 +27,15 @@ public class LoginScreen extends Application {
         root.setStyle("-fx-background-color: #F8F8F8;");
 
         // Title
-        Label title = new Label("iTrash");
+        Label title = new Label("iTrash Login");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 36));
         title.setTextFill(Color.GREEN);
 
-        // Subtitle
-        Label subtitle = new Label("Keeping Our Parks and Cities Green and Clean");
-        subtitle.setFont(Font.font("Arial", FontWeight.NORMAL, 16));
-        subtitle.setTextFill(Color.BLACK);
-
-        // Email field
-        TextField emailField = new TextField();
-        emailField.setPromptText("Email");
-        emailField.setMaxWidth(300);
-        emailField.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 5;");
+        // Username/Email field
+        TextField usernameOrEmailField = new TextField();
+        usernameOrEmailField.setPromptText("Username or Email");
+        usernameOrEmailField.setMaxWidth(300);
+        usernameOrEmailField.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 5;");
 
         // Password field
         PasswordField passwordField = new PasswordField();
@@ -55,48 +44,37 @@ public class LoginScreen extends Application {
         passwordField.setStyle("-fx-background-radius: 10; -fx-border-radius: 10; -fx-padding: 5;");
 
         // Login button
-        Button loginButton = new Button("Log In");
+        Button loginButton = new Button("Login");
         loginButton.setMaxWidth(200);
-        loginButton.setStyle("-fx-background-color: #004d00; -fx-text-fill: white; -fx-background-radius: 10;"); // Dark green background
+        loginButton.setStyle("-fx-background-color: #004d00; -fx-text-fill: white; -fx-background-radius: 10;");
 
-        // Forgot Password link
-        Hyperlink forgotPassword = new Hyperlink("Forgot Password?");
-        forgotPassword.setTextFill(Color.GREEN);
-        forgotPassword.setUnderline(true);
-
-        // New User hyperlink
-        Hyperlink newUserLink = new Hyperlink("New User?");
-        newUserLink.setTextFill(Color.GREEN);
-        newUserLink.setUnderline(true);
-
-        // Add event handling to the login button
+        // Add event handling for login button
         loginButton.setOnAction(event -> {
-            String enteredEmail = emailField.getText();
-            String enteredPassword = passwordField.getText();
+            String usernameOrEmail = usernameOrEmailField.getText();
+            String password = passwordField.getText();
 
-            // Check if the entered email and password match the stored credentials
-            if (storedCredentials.containsKey(enteredEmail) &&
-                    storedCredentials.get(enteredEmail).equals(enteredPassword)) {
-                System.out.println("Login successful for " + enteredEmail);
+            if (authenticateUser(usernameOrEmail, password)) {
+                // Navigate to MonthFilterScreen
+                MonthFilterScreen monthFilterScreen = new MonthFilterScreen();
+                try {
+                    monthFilterScreen.start(primaryStage);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             } else {
-                // Show login failed message
-                System.out.println("Login failed. Invalid credentials.");
+                // Show error message
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Invalid credentials. Please try again.", ButtonType.OK);
+                alert.showAndWait();
             }
         });
 
-        // Forgot Password hyperlink event handling
-        forgotPassword.setOnAction(event -> {
-            SendLinkScreen sendLinkScreen = new SendLinkScreen(); // Correct class name
-            try {
-                sendLinkScreen.start(primaryStage);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        // Back to Sign Up hyperlink
+        Hyperlink backToSignUp = new Hyperlink("Create a new account");
+        backToSignUp.setTextFill(Color.GREEN);
+        backToSignUp.setUnderline(true);
 
-
-        // New User hyperlink event handling
-        newUserLink.setOnAction(event -> {
+        // Add event handling to the backToSignUp hyperlink
+        backToSignUp.setOnAction(event -> {
             NewUserScreen newUserScreen = new NewUserScreen();
             try {
                 newUserScreen.start(primaryStage);
@@ -106,16 +84,42 @@ public class LoginScreen extends Application {
         });
 
         // Add elements to the layout
-        root.getChildren().addAll(title, subtitle, emailField, passwordField, loginButton, forgotPassword, newUserLink);
+        root.getChildren().addAll(
+                title,
+                usernameOrEmailField,
+                passwordField,
+                loginButton,
+                backToSignUp
+        );
 
         // Scene and Stage
-        Scene scene = new Scene(root, 400, 600);
-        primaryStage.setTitle("Login Screen");
+        Scene scene = new Scene(root, 400, 400);
+        primaryStage.setTitle("Login");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    public boolean authenticateUser(String usernameOrEmail, String password) {
+        String query = "SELECT * FROM users WHERE (username = ? OR email = ?) AND password = ?";
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/iTrash?useSSL=false", "root", "kenrick");
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, usernameOrEmail);
+            preparedStatement.setString(2, usernameOrEmail);
+            preparedStatement.setString(3, password);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            // If a record exists, the credentials are valid
+            return resultSet.next();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static void main(String[] args) {
         launch(args);
     }
-}//hello
+}

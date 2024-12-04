@@ -10,11 +10,10 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 
 public class NewUserScreen extends Application {
 
@@ -98,12 +97,28 @@ public class NewUserScreen extends Application {
         createAccountButton.setMaxWidth(200);
         createAccountButton.setStyle("-fx-background-color: #004d00; -fx-text-fill: white; -fx-background-radius: 10;");
 
+        createAccountButton.setOnAction(event -> {
+            String firstName = firstNameField.getText();
+            String lastName = lastNameField.getText();
+            String username = usernameField.getText();
+            String email = emailField.getText();
+            String phoneNumber = phoneField.getText();
+            String password = passwordField.getText();
+            String confirmPassword = confirmPasswordField.getText();
+
+            if (password.equals(confirmPassword)) {
+                insertUser(username, firstName, lastName, email, phoneNumber, password);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Passwords do not match!", ButtonType.OK);
+                alert.showAndWait();
+            }
+        });
+
         // Back to Login hyperlink
         Hyperlink backToLogin = new Hyperlink("Back to Login");
         backToLogin.setTextFill(Color.GREEN);
         backToLogin.setUnderline(true);
 
-        // Add event handling to the backToLogin hyperlink
         backToLogin.setOnAction(event -> {
             LoginScreen loginScreen = new LoginScreen();
             try {
@@ -131,7 +146,7 @@ public class NewUserScreen extends Application {
 
     public void insertUser(String username, String firstName, String lastName, String email, String phoneNumber, String password) {
         String query = "INSERT INTO users (username, first_name, last_name, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/iTrash?useSSL=false", "root", "iTrashRoot");
+        try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/iTrash?useSSL=false", "root", "kenrick");
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, username);
@@ -139,15 +154,18 @@ public class NewUserScreen extends Application {
             preparedStatement.setString(3, lastName);
             preparedStatement.setString(4, email);
             preparedStatement.setString(5, phoneNumber);
-            preparedStatement.setString(6, password); // Preferably hashed
+            preparedStatement.setString(6, password);
 
             preparedStatement.executeUpdate();
             System.out.println("User inserted successfully!");
+            Alert successAlert = new Alert(Alert.AlertType.INFORMATION, "Account created successfully!", ButtonType.OK);
+            successAlert.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
+            Alert errorAlert = new Alert(Alert.AlertType.ERROR, "Failed to create account. Please try again.", ButtonType.OK);
+            errorAlert.showAndWait();
         }
     }
-
 
     private VBox createLabeledField(String fieldName, TextField field) {
         VBox labeledField = new VBox(5);
