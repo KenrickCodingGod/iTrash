@@ -145,7 +145,7 @@ public class NewUserScreen extends Application {
     }
 
     public void insertUser(String username, String firstName, String lastName, String email, String phoneNumber, String password) {
-        String query = "INSERT INTO users (username, first_name, last_name, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO users (username, first_name, last_name, email, phone_number, passwordhash, salt) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/iTrash?useSSL=false", "root", "kenrick");
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
@@ -154,7 +154,10 @@ public class NewUserScreen extends Application {
             preparedStatement.setString(3, lastName);
             preparedStatement.setString(4, email);
             preparedStatement.setString(5, phoneNumber);
-            preparedStatement.setString(6, password);
+            String salt = hash_slinging_slasher.generateSalt();
+            String hashed = hash_slinging_slasher.hash(password, salt);
+            preparedStatement.setString(6, hashed);
+            preparedStatement.setString(7, salt);
 
             preparedStatement.executeUpdate();
             System.out.println("User inserted successfully!");
